@@ -26,6 +26,7 @@ class SheetUploader:
         sheet_title: str,
         drive_folder_id: str,
         open_browser: bool = False,
+        skip_prompt: bool = False,
     ):
         self.drive = drive
         self.sheets = sheets
@@ -33,6 +34,8 @@ class SheetUploader:
         self.sheet_title = sheet_title
         self.drive_folder_id = drive_folder_id
         self.open_browser = open_browser
+        self.skip_prompt = skip_prompt
+        self.spreadsheet_id: str | None = None  # Track created/used spreadsheet ID
 
     def find_sheet_in_folder_by_name(
         self, folder_id: str, name: str, shared_drive_id: str | None = None
@@ -70,6 +73,10 @@ class SheetUploader:
         )
 
         if existing:
+            if self.skip_prompt:
+                # In test mode, just overwrite without prompting
+                return existing["id"]
+            
             # Prompt user for confirmation before overwriting
             print(
                 f"\n⚠️  A spreadsheet named '{self.sheet_title}' already exists in this folder."
@@ -156,6 +163,7 @@ class SheetUploader:
 
         # Get or create spreadsheet
         spreadsheet_id = self.get_or_create_spreadsheet_id()
+        self.spreadsheet_id = spreadsheet_id  # Track for cleanup
 
         # Update the sheet with the table data
         self.clear_and_write(spreadsheet_id, table)
