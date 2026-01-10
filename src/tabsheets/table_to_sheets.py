@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import json
 import os
 import re
 import sys
@@ -14,7 +13,7 @@ from pathlib import Path
 from typing import List, Optional, Any
 
 from google.oauth2 import service_account
-from googleapiclient.discovery import Resource, build
+from googleapiclient.discovery import build
 
 
 DRIVE_SCOPES = [
@@ -134,30 +133,30 @@ class TableSheetManager:
     @classmethod
     def from_toml(cls, config_path: Path) -> "TableSheetManager":
         """Create a TableSheetManager from a TOML configuration file.
-        
+
         Expected TOML structure:
         [table_sheet_manager]
         table_path = "path/to/table.md"
         sheet_title = "My Sheet Title"
         drive_folder_id = "folder_id"  # required
         open_browser = false  # optional
-        
+
         Note: Credentials must be provided via --creds CLI argument.
         """
         with open(config_path, "rb") as f:
             config = tomllib.load(f)
-        
+
         # Get the table_sheet_manager section
         section = config.get("table_sheet_manager", {})
-        
+
         # Required fields
         table_path = Path(section["table_path"])
         sheet_title = section["sheet_title"]
         drive_folder_id = section["drive_folder_id"]
-        
+
         # Optional fields with defaults
         open_browser = section.get("open_browser", False)
-        
+
         return cls(
             table_path=table_path,
             sheet_title=sheet_title,
@@ -169,14 +168,14 @@ class TableSheetManager:
     @cached_property
     def _credentials(self) -> service_account.Credentials:
         """Lazy-load service account credentials.
-        
+
         Tries in order:
         1. creds_json path from config
         2. GOOGLE_APPLICATION_CREDENTIALS environment variable
         3. Raises error if neither is available
         """
         creds_path = None
-        
+
         if self.creds_json:
             creds_path = str(self.creds_json)
         elif "GOOGLE_APPLICATION_CREDENTIALS" in os.environ:
@@ -190,7 +189,7 @@ class TableSheetManager:
                 "Recommended: Store credentials in ~/.config/gcloud/ and use:\n"
                 "  export GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/my-service-account.json"
             )
-        
+
         return service_account.Credentials.from_service_account_file(
             creds_path,
             scopes=DRIVE_SCOPES + SHEETS_SCOPES,
@@ -213,20 +212,28 @@ class TableSheetManager:
         existing = self.find_sheet_in_folder_by_name(
             self.drive_folder_id, self.sheet_title
         )
-        
+
         if existing:
             # Prompt user for confirmation before overwriting
-            print(f"\n⚠️  A spreadsheet named '{self.sheet_title}' already exists in this folder.")
+            print(
+                f"\n⚠️  A spreadsheet named '{self.sheet_title}' already exists in this folder."
+            )
             print(f"   URL: {existing.get('webViewLink', 'N/A')}")
-            response = input("\nDo you want to proceed and overwrite it? (yes/no): ").strip().lower()
-            
-            if response in ('yes', 'y'):
+            response = (
+                input("\nDo you want to proceed and overwrite it? (yes/no): ")
+                .strip()
+                .lower()
+            )
+
+            if response in ("yes", "y"):
                 print("Proceeding to overwrite the existing spreadsheet...")
                 return existing["id"]
             else:
-                print("Operation cancelled. The existing spreadsheet will not be modified.")
+                print(
+                    "Operation cancelled. The existing spreadsheet will not be modified."
+                )
                 sys.exit(0)
-        
+
         # Create new spreadsheet if not found
         return self._create_spreadsheet()
 
@@ -391,7 +398,7 @@ def main():
 
     manager = TableSheetManager.from_toml(args.config)
     manager.creds_json = args.creds
-    
+
     url = manager.sync_table_to_sheet()
     print(url)
 
