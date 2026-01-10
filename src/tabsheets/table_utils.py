@@ -90,3 +90,50 @@ def a1_range_for_size(n_rows: int, n_cols: int) -> str:
     end_row = max(1, n_rows)
     return f"A1:{end_col}{end_row}"
 
+
+def write_markdown_table(rows: List[List[str]]) -> str:
+    """Convert table data to Markdown pipe table format."""
+    if not rows:
+        return ""
+    
+    # Calculate column widths
+    n_cols = max(len(row) for row in rows) if rows else 0
+    col_widths = [0] * n_cols
+    
+    for row in rows:
+        for i, cell in enumerate(row):
+            col_widths[i] = max(col_widths[i], len(cell))
+    
+    lines = []
+    for idx, row in enumerate(rows):
+        # Pad row to full width
+        padded_row = row + [""] * (n_cols - len(row))
+        # Format cells with padding
+        formatted_cells = [cell.ljust(col_widths[i]) for i, cell in enumerate(padded_row)]
+        lines.append("| " + " | ".join(formatted_cells) + " |")
+        
+        # Add separator after header row
+        if idx == 0:
+            sep_cells = ["-" * col_widths[i] for i in range(n_cols)]
+            lines.append("| " + " | ".join(sep_cells) + " |")
+    
+    return "\n".join(lines) + "\n"
+
+
+def write_csv_table(rows: List[List[str]]) -> str:
+    """Convert table data to CSV format."""
+    import io
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerows(rows)
+    return output.getvalue()
+
+
+def write_tsv_table(rows: List[List[str]]) -> str:
+    """Convert table data to TSV format."""
+    import io
+    output = io.StringIO()
+    writer = csv.writer(output, delimiter="\t")
+    writer.writerows(rows)
+    return output.getvalue()
+

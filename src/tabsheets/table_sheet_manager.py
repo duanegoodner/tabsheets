@@ -11,7 +11,15 @@ from typing import List, Optional, Any
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
-from tabsheets.table_utils import a1_range_for_size, extract_csv_table, extract_first_pipe_table, extract_tsv_table
+from tabsheets.table_utils import (
+    a1_range_for_size,
+    extract_csv_table,
+    extract_first_pipe_table,
+    extract_tsv_table,
+    write_csv_table,
+    write_markdown_table,
+    write_tsv_table,
+)
 
 DRIVE_SCOPES = [
     "https://www.googleapis.com/auth/drive",
@@ -21,6 +29,7 @@ SHEETS_SCOPES = [
 ]
 
 SHEET_MIME = "application/vnd.google-apps.spreadsheet"
+
 
 class TableSheetManager:
     """Manages synchronization of tabular data (MD/CSV/TSV) to Google Sheets."""
@@ -282,5 +291,75 @@ class TableSheetManager:
         # Open in browser if requested
         if self.open_browser:
             webbrowser.open(url)
+
+        return url
+
+    def sync_sheet_to_table(self) -> str:
+        """Reverse synchronization: reads data from Google Sheets and writes to table file.
+        Returns the path of the written table file.
+        """
+        # Find the spreadsheet (error if not found)
+        existing = self.find_sheet_in_folder_by_name(
+            self.drive_folder_id, self.sheet_title
+        )
+        
+        if not existing:
+            raise ValueError(
+                f"No spreadsheet named '{self.sheet_title}' found in the specified folder.\n"
+                f"Cannot sync from a non-existent sheet."
+            )
+        
+        sheet_id = existing["id"]
+        
+        # Check if table file exists and prompt for overwrite
+        if self.table_path.exists():
+            print(f"\n⚠️  A file already exists at: {self.table_path}")
+            response = (
+                input("\nDo you want to overwrite it? (yes/no): ")
+                .strip()
+                .lower()
+            )
+            
+            if response not in ("yes", "y"):
+                print("Operation cancelled. The existing file will not be modified.")
+                sys.exit(0)
+        
+        # Read data from the sheet
+        result = (
+            self.sheets.spreadsheets()  # type: ignore
+            .values()
+            .get(spreadsheetId=sheet_id, range="A1:ZZ10000")
+            .execute()
+        )
+        
+        values = result.get("values", [])
+        
+        if not values:
+            raise ValueError(
+                f"No data found in spreadsheet '{self.sheet_title}'. "
+                "Cannot write an empty table."
+            )
+        
+        # Determine format and write based on file extension
+        suffix = self.table_path.suffix.lower()
+        
+        if suffix == ".md":
+            content = write_markdown_table(values)
+        elif suffix == ".csv":
+            content = write_csv_table(values)
+        elif suffix == ".tsv":
+            content = write_tsv_table(values)
+        else:
+            raise ValueError(
+                f"Unsupported file format: {suffix}. "
+                "Supported formats: .md, .csv, .tsv"
+            )
+        
+        # Write to file
+        self.table_path.parent.mkdir(parents=True, exist_ok=True)
+        self.table_path.write_text(content, encoding="utf-8")
+        
+        return str(self.table_path)
+
 
         return url

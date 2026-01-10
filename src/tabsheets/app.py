@@ -9,7 +9,14 @@ from tabsheets.table_sheet_manager import TableSheetManager
 
 def main():
     ap = argparse.ArgumentParser(
-        description="Sync tabular data (MD/CSV/TSV) to Google Sheets (service account)."
+        description="Sync tabular data (MD/CSV/TSV) to/from Google Sheets (service account)."
+    )
+    ap.add_argument(
+        "--direction",
+        required=True,
+        choices=["tab2sheet", "sheet2tab"],
+        help="Direction of sync: 'tab2sheet' (table file -> Google Sheet) or "
+        "'sheet2tab' (Google Sheet -> table file)",
     )
     ap.add_argument(
         "--config",
@@ -29,8 +36,12 @@ def main():
     manager = TableSheetManager.from_toml(args.config)
     manager.creds_json = args.creds
 
-    url = manager.sync_table_to_sheet()
-    print(url)
+    if args.direction == "tab2sheet":
+        result = manager.sync_table_to_sheet()
+    else:  # sheet2tab
+        result = manager.sync_sheet_to_table()
+    
+    print(result)
 
 
 if __name__ == "__main__":
