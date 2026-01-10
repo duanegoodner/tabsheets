@@ -19,7 +19,7 @@ Bidirectional sync between tabular data files (Markdown tables, CSV, TSV) and Go
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/tabsheets.git
+git clone https://github.com/duanegoodner/tabsheets.git
 cd tabsheets
 
 # Create and activate conda environment
