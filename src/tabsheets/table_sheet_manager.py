@@ -1,12 +1,10 @@
 from __future__ import annotations
 
 import os
-import sys
 import tomllib
-import webbrowser
 from functools import cached_property
 from pathlib import Path
-from typing import List, Optional, Any
+from typing import Optional, Any
 
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
@@ -14,15 +12,6 @@ from googleapiclient.discovery import build
 from tabsheets.config_resolver import ConfigResolver
 from tabsheets.sheet_uploader import SheetUploader
 from tabsheets.table_downloader import TableDownloader
-from tabsheets.table_utils import (
-    a1_range_for_size,
-    extract_csv_table,
-    extract_first_pipe_table,
-    extract_tsv_table,
-    write_csv_table,
-    write_markdown_table,
-    write_tsv_table,
-)
 
 DRIVE_SCOPES = [
     "https://www.googleapis.com/auth/drive",
@@ -30,8 +19,6 @@ DRIVE_SCOPES = [
 SHEETS_SCOPES = [
     "https://www.googleapis.com/auth/spreadsheets",
 ]
-
-SHEET_MIME = "application/vnd.google-apps.spreadsheet"
 
 
 
