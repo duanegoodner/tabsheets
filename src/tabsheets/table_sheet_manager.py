@@ -11,6 +11,7 @@ from typing import List, Optional, Any
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 
+from tabsheets.config_resolver import ConfigResolver
 from tabsheets.table_utils import (
     a1_range_for_size,
     extract_csv_table,
@@ -31,6 +32,9 @@ SHEETS_SCOPES = [
 SHEET_MIME = "application/vnd.google-apps.spreadsheet"
 
 
+
+
+
 class TableSheetManager:
     """Manages synchronization of tabular data (MD/CSV/TSV) to Google Sheets."""
 
@@ -49,7 +53,14 @@ class TableSheetManager:
         self.open_browser = open_browser
 
     @classmethod
-    def from_toml(cls, config_path: Path) -> "TableSheetManager":
+    def from_toml(
+        cls,
+        config_path: Path,
+        cli_table_path: Optional[Path] = None,
+        cli_sheet_title: Optional[str] = None,
+        cli_drive_folder_id: Optional[str] = None,
+        cli_open_browser: bool = False,
+    ) -> "TableSheetManager":
         """Create a TableSheetManager from a TOML configuration file.
 
         Expected TOML structure:
@@ -59,21 +70,30 @@ class TableSheetManager:
         drive_folder_id = "folder_id"  # required
         open_browser = false  # optional
 
-        Note: Credentials must be provided via --creds CLI argument.
+        CLI arguments can override/validate config values. If both CLI and config
+        provide a value, they must match or an error is raised.
         """
         with open(config_path, "rb") as f:
             config = tomllib.load(f)
 
         # Get the table_sheet_manager section
         section = config.get("table_sheet_manager", {})
+        
+        # Create resolver to handle CLI/config merging and validation
+        resolver = ConfigResolver(section)
 
-        # Required fields
-        table_path = Path(section["table_path"])
-        sheet_title = section["sheet_title"]
-        drive_folder_id = section["drive_folder_id"]
+        # Resolve required fields
+        table_path = resolver.resolve("table_path", cli_table_path, is_path=True)
+        sheet_title = resolver.resolve("sheet_title", cli_sheet_title)
+        drive_folder_id = resolver.resolve("drive_folder_id", cli_drive_folder_id)
 
-        # Optional fields with defaults
-        open_browser = section.get("open_browser", False)
+        # Convert to Path if string
+        if isinstance(table_path, str):
+            table_path = Path(table_path)
+
+        # Resolve optional field (open_browser)
+        # CLI flag takes precedence if set to True
+        open_browser = cli_open_browser or section.get("open_browser", False)
 
         return cls(
             table_path=table_path,
