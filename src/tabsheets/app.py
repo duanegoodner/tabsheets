@@ -12,11 +12,10 @@ def main():
         description="Sync tabular data (MD/CSV/TSV) to/from Google Sheets (service account)."
     )
     ap.add_argument(
-        "--direction",
-        required=True,
-        choices=["tab2sheet", "sheet2tab"],
-        help="Direction of sync: 'tab2sheet' (table file -> Google Sheet) or "
-        "'sheet2tab' (Google Sheet -> table file)",
+        "direction",
+        choices=["upload", "download"],
+        help="Direction of sync: 'upload' (table file -> Google Sheet) or "
+        "'download' (Google Sheet -> table file)",
     )
     ap.add_argument(
         "--config",
@@ -36,9 +35,9 @@ def main():
     manager = TableSheetManager.from_toml(args.config)
     manager.creds_json = args.creds
 
-    if args.direction == "tab2sheet":
+    if args.direction == "upload":
         result = manager.sync_table_to_sheet()
-    else:  # sheet2tab
+    else:  # download
         result = manager.sync_sheet_to_table()
     
     print(result)
