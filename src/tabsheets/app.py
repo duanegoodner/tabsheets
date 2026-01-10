@@ -25,15 +25,15 @@ def main():
     )
     ap.add_argument(
         "--creds",
-        required=True,
         type=Path,
         help="Path to Google service account credentials JSON file. "
-        "Falls back to GOOGLE_APPLICATION_CREDENTIALS env var if file not found.",
+        "If not provided, uses TABSHEETS_CREDENTIALS or GOOGLE_APPLICATION_CREDENTIALS env var.",
     )
     args = ap.parse_args()
 
     manager = TableSheetManager.from_toml(args.config)
-    manager.creds_json = args.creds
+    if args.creds:
+        manager.creds_json = args.creds
 
     if args.direction == "upload":
         result = manager.sync_table_to_sheet()

@@ -88,24 +88,28 @@ class TableSheetManager:
         """Lazy-load service account credentials.
 
         Tries in order:
-        1. creds_json path from config
-        2. GOOGLE_APPLICATION_CREDENTIALS environment variable
-        3. Raises error if neither is available
+        1. creds_json path from CLI --creds argument
+        2. TABSHEETS_CREDENTIALS environment variable
+        3. GOOGLE_APPLICATION_CREDENTIALS environment variable
+        4. Raises error if none available
         """
         creds_path = None
 
         if self.creds_json:
             creds_path = str(self.creds_json)
+        elif "TABSHEETS_CREDENTIALS" in os.environ:
+            creds_path = os.environ["TABSHEETS_CREDENTIALS"]
         elif "GOOGLE_APPLICATION_CREDENTIALS" in os.environ:
             creds_path = os.environ["GOOGLE_APPLICATION_CREDENTIALS"]
         else:
             raise ValueError(
-                "No credentials found. Please either:\n"
-                "  1. Set 'creds_json' in your config.toml, or\n"
-                "  2. Set the GOOGLE_APPLICATION_CREDENTIALS environment variable\n"
+                "No credentials found. Please use one of:\n"
+                "  1. Pass --creds /path/to/credentials.json at the command line\n"
+                "  2. Set TABSHEETS_CREDENTIALS environment variable\n"
+                "  3. Set GOOGLE_APPLICATION_CREDENTIALS environment variable\n"
                 "\n"
-                "Recommended: Store credentials in ~/.config/gcloud/ and use:\n"
-                "  export GOOGLE_APPLICATION_CREDENTIALS=~/.config/gcloud/my-service-account.json"
+                "Example:\n"
+                "  export TABSHEETS_CREDENTIALS=~/.config/gcloud/my-service-account.json"
             )
 
         return service_account.Credentials.from_service_account_file(
