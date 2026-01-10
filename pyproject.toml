@@ -14,7 +14,7 @@ dependencies = [
 ]
 
 [project.scripts]
-tabsheets = "tabsheets.table_to_sheets:main"
+tabsheets = "tabsheets.app:main"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
