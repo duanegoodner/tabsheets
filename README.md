@@ -227,6 +227,73 @@ Value 1	Value 2
 7. **Result**: Returns the local file path
 
 
+## Testing
+
+The test suite uses real Google Drive API integration to ensure end-to-end functionality.
+
+### Setup
+
+1. **Install development dependencies**:
+   ```bash
+   pip install -e ".[dev]"
+   ```
+
+2. **Set required environment variables**:
+   ```bash
+   # Path to your service account credentials JSON file
+   export TABSHEETS_CREDENTIALS=/path/to/your/credentials.json
+   
+   # Google Drive folder ID where test files will be created
+   # (Find this in the folder URL: https://drive.google.com/drive/folders/<FOLDER_ID>)
+   export TABSHEETS_TEST_FOLDER_ID=your_folder_id_here
+   ```
+
+3. **Ensure service account has access**:
+   - The test folder should be in a **Shared Drive** (recommended)
+   - Share the folder with your service account email
+   - Service account needs at least **Content Manager** permissions on the folder
+
+### Running Tests
+
+```bash
+# Run all tests
+pytest
+
+# Run specific test module
+pytest test/test_sheet_uploader.py
+
+# Run with verbose output
+pytest -v
+
+# Run with output from print statements (shows cleanup notifications)
+pytest -v -s
+```
+
+### Test Cleanup
+
+- Test files are automatically moved to **Google Drive Trash** after each test
+- Files are named with timestamps (e.g., `TEST_20260110_143052_MD_Upload`) for easy identification
+- Service accounts in Shared Drives have `canTrash` but not `canDelete` permissions, so files go to trash instead of being permanently deleted
+- You can inspect test files in your **Google Drive Trash** via browser before emptying it
+- Cleanup failures will cause tests to fail
+
+### Test Coverage
+
+- **ConfigResolver**: CLI/config value resolution and conflict detection
+- **table_utils**: Table extraction and writing for MD/CSV/TSV formats
+- **SheetUploader**: Upload integration with real Google Drive
+- **TableDownloader**: Download integration with content verification
+- **TableSheetManager**: End-to-end workflows and overwrite behavior
+
+### Debugging
+
+If tests fail with permission errors:
+- Check that `TABSHEETS_CREDENTIALS` points to valid service account JSON
+- Verify the service account has access to the test folder
+- Ensure the test folder is in a Shared Drive (not My Drive)
+- Check service account has Content Manager or Editor role on the folder
+
+
 ## License
 
 MIT
