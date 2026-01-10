@@ -19,7 +19,7 @@ Bidirectional sync between tabular data files (Markdown tables, CSV, TSV) and Go
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/your-username/tabsheets.git
 cd tabsheets
 
 # Create and activate conda environment
@@ -30,10 +30,11 @@ conda activate tabsheets
 pip install -e .
 ```
 
-### Using pip
+### Using pip (from GitHub)
 
 ```bash
-pip install tabsheets
+# Install directly from GitHub
+pip install git+https://github.com/duanegoodner/tabsheets.git
 ```
 
 ## Prerequisites
@@ -277,13 +278,6 @@ pytest -v -s
 - You can inspect test files in your **Google Drive Trash** via browser before emptying it
 - Cleanup failures will cause tests to fail
 
-### Test Coverage
-
-- **ConfigResolver**: CLI/config value resolution and conflict detection
-- **table_utils**: Table extraction and writing for MD/CSV/TSV formats
-- **SheetUploader**: Upload integration with real Google Drive
-- **TableDownloader**: Download integration with content verification
-- **TableSheetManager**: End-to-end workflows and overwrite behavior
 
 ### Debugging
 
