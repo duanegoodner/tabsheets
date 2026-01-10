@@ -11,7 +11,7 @@ import tomllib
 import webbrowser
 from functools import cached_property
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Any
 
 from google.oauth2 import service_account
 from googleapiclient.discovery import Resource, build
@@ -197,12 +197,12 @@ class TableSheetManager:
         )
 
     @cached_property
-    def drive(self) -> Resource:
+    def drive(self) -> Any:
         """Lazy-load Google Drive API service."""
         return build("drive", "v3", credentials=self._credentials)
 
     @cached_property
-    def sheets(self) -> Resource:
+    def sheets(self) -> Any:
         """Lazy-load Google Sheets API service."""
         return build("sheets", "v4", credentials=self._credentials)
 
@@ -236,10 +236,10 @@ class TableSheetManager:
             "name": self.sheet_title,
             "mimeType": "application/vnd.google-apps.spreadsheet",
         }
-        metadata["parents"] = [self.drive_folder_id]
+        metadata["parents"] = [self.drive_folder_id]  # type: ignore
 
         created = (
-            self.drive.files()
+            self.drive.files()  # type: ignore
             .create(body=metadata, fields="id", supportsAllDrives=True)
             .execute()
         )
@@ -275,13 +275,13 @@ class TableSheetManager:
         )  # pad to clear leftovers
 
         # Clear
-        self.sheets.spreadsheets().values().batchClear(
+        self.sheets.spreadsheets().values().batchClear(  # type: ignore
             spreadsheetId=spreadsheet_id,
             body={"ranges": [target_range]},
         ).execute()
 
         # Write
-        self.sheets.spreadsheets().values().update(
+        self.sheets.spreadsheets().values().update(  # type: ignore
             spreadsheetId=spreadsheet_id,
             range="A1",
             valueInputOption="RAW",
@@ -318,7 +318,7 @@ class TableSheetManager:
                 }
             )
 
-        resp = self.drive.files().list(**params).execute()
+        resp = self.drive.files().list(**params).execute()  # type: ignore
         return resp.get("files", [])
 
     def find_sheet_in_folder_by_name(
